@@ -16,7 +16,6 @@ This repository contains a minimal eBPF application that monitors process execut
 
 - **CO-RE compatibility**: Works across different kernel versions without recompilation
 - **Minimal dependencies**: Only requires `libbpf` at runtime (no Clang/LLVM needed)
-- **Proper packaging**: Shows how to generate `vmlinux.h` from the target kernel during RPM build
 
 ## Repository Contents
 
@@ -40,11 +39,9 @@ The resulting `process-snoop-1.0.tar.gz` can then be used with `rpmbuild` or upl
 
 See `process-snoop.spec` for the complete build process. The key steps are:
 
-1. Extract BTF from the target kernel's `vmlinuz` image
-2. Generate `vmlinux.h` header file
-3. Compile the eBPF program with Clang
-4. Generate the skeleton header with `bpftool`
-5. Compile the userspace loader
+1. Compile the eBPF program with Clang
+2. Generate the skeleton header with `bpftool`
+3. Compile the userspace loader
 
 ## Runtime Requirements
 

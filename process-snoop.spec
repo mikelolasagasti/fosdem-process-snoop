@@ -1,6 +1,6 @@
 Name:           process-snoop
 Version:        1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A pure CO-RE eBPF process monitor
 
 License:        GPLv2
@@ -11,17 +11,16 @@ Source0:        %{name}-%{version}.tar.gz
 BuildRequires:  clang
 BuildRequires:  llvm
 BuildRequires:  gcc
-# tools to generate vmlinux.h and skeleton
+# tool to generate skeleton
 BuildRequires:  bpftool
 # library headers
 BuildRequires:  libbpf-devel
-# THE SECRET SAUCE: Provides BTF for the target distro kernel
+# It provides vmlinux.h
 BuildRequires:  kernel-devel
-BuildRequires:  kernel-core
 
 # --- RUNTIME DEPENDENCIES ---
 # Notice: NO clang/llvm here! Just the library.
-Requires:       libbpf
+Requires:       libbpf >= 1.3
 
 %description
 A demonstration of a Pure CO-RE eBPF tool packaged for Fedora.
@@ -30,28 +29,16 @@ A demonstration of a Pure CO-RE eBPF tool packaged for Fedora.
 %setup -q
 
 %build
-# 1. Get Kernel Version
-# Query kernel-core for the exact version string matching the directory structure
+# 1. FIND VMLINUX.H
+# We query the installed kernel-devel package for its version
 KVER=$(rpm -q --qf '%%{VERSION}-%%{RELEASE}.%%{ARCH}' kernel-core | head -n 1)
 
-# 2. Define Static Paths
-VMLINUZ="/lib/modules/$KVER/vmlinuz"
-EXTRACT_SCRIPT="/usr/src/kernels/$KVER/scripts/extract-vmlinux"
-
-# 3. Safety Check (Good practice in case KVER parsing drifts)
-if [ ! -f "$VMLINUZ" ] || [ ! -x "$EXTRACT_SCRIPT" ]; then
-    echo "Error: Files not found at expected paths!"
-    echo "  Kernel: $VMLINUZ"
-    echo "  Script: $EXTRACT_SCRIPT"
-    exit 1
-fi
-
-# 4. Decompress and Generate Headers
-$EXTRACT_SCRIPT "$VMLINUZ" > vmlinux_local
-bpftool btf dump file vmlinux_local format c > vmlinux.h
-rm -f vmlinux_local
+# Fedora ships vmlinux.h directly in the kernel headers directory
+# We simply copy it to our source tree so our BPF code finds it
+cp "/usr/src/kernels/$KVER/vmlinux.h" vmlinux.h
 
 # 2. COMPILE BPF (KERNEL SIDE)
+# Compile directly against the local vmlinux.h
 # -g: debug info (needed for BTF)
 # -O2: required by verifier
 # -target bpf: output BPF bytecode
@@ -72,5 +59,8 @@ install -m 755 process-snoop %{buildroot}%{_bindir}/
 %license LICENSE
 
 %changelog
-* Fri Jan 30 2026 FOSDEM Demo - 1.0.0-1
+* Sun Feb 01 2026 FOSDEM Demo - 1.0-2
+- Rely on kernel-devel provided vmlinux.h instead of extracting it from kernel-core
+
+* Fri Jan 30 2026 FOSDEM Demo - 1.0-1
 - Initial CO-RE package

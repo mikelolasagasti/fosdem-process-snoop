@@ -31,7 +31,7 @@ A demonstration of a Pure CO-RE eBPF tool packaged for Fedora.
 %build
 # 1. FIND VMLINUX.H
 # We query the installed kernel-devel package for its version
-KVER=$(rpm -q --qf '%%{VERSION}-%%{RELEASE}.%%{ARCH}' kernel-core | head -n 1)
+KVER=$(rpm -q --qf '%%{VERSION}-%%{RELEASE}.%%{ARCH}' kernel-devel | head -n 1)
 
 # Fedora ships vmlinux.h directly in the kernel headers directory
 # We simply copy it to our source tree so our BPF code finds it
